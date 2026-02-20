@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Journi's To Do List</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Pacifico&family=Nunito:wght@400;600;700&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #ffe0f0 0%, #ffc2df 50%, #ffadd6 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Nunito', sans-serif;
+      padding: 20px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Flower decals */
+    .flower {
+      position: fixed;
+      font-size: 2.5rem;
+      opacity: 0.35;
+      pointer-events: none;
+      user-select: none;
+    }
+    .f1 { top: 2%; left: 2%; font-size: 3.5rem; }
+    .f2 { top: 8%; right: 4%; font-size: 2.8rem; }
+    .f3 { bottom: 5%; left: 5%; font-size: 3rem; }
+    .f4 { bottom: 10%; right: 3%; font-size: 2.5rem; }
+    .f5 { top: 45%; left: 1%; font-size: 2rem; }
+    .f6 { top: 35%; right: 1%; font-size: 2rem; }
+    .f7 { top: 20%; left: 15%; font-size: 1.5rem; opacity: 0.2; }
+    .f8 { bottom: 25%; right: 12%; font-size: 1.5rem; opacity: 0.2; }
+
+    .card {
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(10px);
+      border-radius: 28px;
+      padding: 36px 32px 32px;
+      width: 100%;
+      max-width: 520px;
+      box-shadow: 0 10px 40px rgba(255, 100, 160, 0.25), 0 2px 8px rgba(255,100,160,0.15);
+      border: 2px solid rgba(255, 180, 210, 0.6);
+      position: relative;
+    }
+
+    /* Flower corners on card */
+    .card::before {
+      content: "🌸";
+      position: absolute;
+      top: -18px; left: 14px;
+      font-size: 2rem;
+    }
+    .card::after {
+      content: "🌸";
+      position: absolute;
+      top: -18px; right: 14px;
+      font-size: 2rem;
+    }
+
+    /* Top-right corner image */
+    .corner-img-wrap {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      border: 3px solid #f4a0c6;
+      box-shadow: 0 4px 14px rgba(224,95,160,0.3);
+      overflow: hidden;
+      cursor: pointer;
+      background: linear-gradient(135deg, #ffe4f1, #ffc8e4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s, box-shadow 0.2s;
+      z-index: 10;
+    }
+    .corner-img-wrap:hover {
+      transform: scale(1.07);
+      box-shadow: 0 6px 18px rgba(224,95,160,0.45);
+    }
+    .corner-img-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+    }
+    .corner-img-wrap .placeholder-icon {
+      font-size: 1.8rem;
+      pointer-events: none;
+    }
+    .corner-img-wrap input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    h1 {
+      font-family: 'Pacifico', cursive;
+      color: #d6437a;
+      text-align: center;
+      font-size: 2rem;
+      margin-bottom: 6px;
+      text-shadow: 2px 2px 0px rgba(255,180,210,0.6);
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #e075a8;
+      font-size: 0.85rem;
+      margin-bottom: 26px;
+      font-weight: 600;
+    }
+
+    /* Image upload section */
+    .img-section {
+      background: linear-gradient(135deg, #fff0f7, #ffe4f1);
+      border: 2px dashed #f4a0c6;
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 22px;
+      text-align: center;
+    }
+
+    .img-section label {
+      display: block;
+      color: #d6437a;
+      font-weight: 700;
+      font-size: 0.85rem;
+      margin-bottom: 8px;
+    }
+
+    #imagePreview {
+      display: none;
+      width: 100%;
+      max-height: 160px;
+      object-fit: cover;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      border: 2px solid #f4a0c6;
+    }
+
+    .upload-btn {
+      display: inline-block;
+      background: linear-gradient(135deg, #f78fb3, #e05fa0);
+      color: white;
+      padding: 8px 20px;
+      border-radius: 20px;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 3px 10px rgba(224,95,160,0.35);
+    }
+    .upload-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 14px rgba(224,95,160,0.45); }
+
+    #fileInput { display: none; }
+
+    /* Input area */
+    .input-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .input-row input {
+      flex: 1;
+      padding: 12px 18px;
+      border: 2px solid #f4a0c6;
+      border-radius: 50px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.95rem;
+      color: #a03070;
+      background: #fff8fc;
+      outline: none;
+      transition: border 0.2s, box-shadow 0.2s;
+    }
+    .input-row input::placeholder { color: #e0a0c0; }
+    .input-row input:focus {
+      border-color: #e05fa0;
+      box-shadow: 0 0 0 3px rgba(224,95,160,0.15);
+    }
+
+    .add-btn {
+      background: linear-gradient(135deg, #f78fb3, #e05fa0);
+      color: white;
+      border: none;
+      border-radius: 50px;
+      padding: 12px 22px;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 700;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 3px 12px rgba(224,95,160,0.4);
+    }
+    .add-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(224,95,160,0.5); }
+    .add-btn:active { transform: translateY(0); }
+
+    /* Stats */
+    .stats {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #c0608a;
+    }
+
+    /* Todo list */
+    #todoList {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 320px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    #todoList::-webkit-scrollbar { width: 6px; }
+    #todoList::-webkit-scrollbar-track { background: #ffe8f3; border-radius: 10px; }
+    #todoList::-webkit-scrollbar-thumb { background: #f4a0c6; border-radius: 10px; }
+
+    .todo-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: linear-gradient(135deg, #fff5fa, #ffe8f4);
+      border: 1.5px solid #f9c0d8;
+      border-radius: 14px;
+      padding: 12px 14px;
+      animation: slideIn 0.25s ease;
+      transition: box-shadow 0.2s;
+    }
+    .todo-item:hover { box-shadow: 0 4px 14px rgba(255,100,170,0.18); }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .todo-item.done .todo-text {
+      text-decoration: line-through;
+      color: #d4a0bb;
+    }
+
+    /* Custom checkbox */
+    .todo-check {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 22px; height: 22px;
+      border: 2.5px solid #f4a0c6;
+      border-radius: 50%;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.2s, border-color 0.2s;
+      position: relative;
+    }
+    .todo-check:checked {
+      background: linear-gradient(135deg, #f78fb3, #e05fa0);
+      border-color: #e05fa0;
+    }
+    .todo-check:checked::after {
+      content: "✓";
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-size: 0.7rem;
+      font-weight: 900;
+    }
+
+    .todo-text {
+      flex: 1;
+      color: #a03070;
+      font-size: 0.95rem;
+      font-weight: 600;
+      word-break: break-word;
+    }
+
+    .flower-tag {
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+
+    .delete-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1.1rem;
+      color: #f4a0c6;
+      padding: 2px 4px;
+      border-radius: 6px;
+      transition: color 0.15s, transform 0.15s;
+      flex-shrink: 0;
+    }
+    .delete-btn:hover { color: #e05fa0; transform: scale(1.2); }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 30px 0;
+      color: #e0a0c0;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    .empty-state div { font-size: 2.5rem; margin-bottom: 8px; }
+
+    /* Clear done */
+    .clear-btn {
+      display: block;
+      width: 100%;
+      margin-top: 16px;
+      padding: 10px;
+      background: transparent;
+      border: 2px solid #f4a0c6;
+      border-radius: 50px;
+      color: #d6437a;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    .clear-btn:hover { background: #fde0ef; }
+  </style>
+</head>
+<body>
+
+  <!-- Background flower decals -->
+  <span class="flower f1">🌸</span>
+  <span class="flower f2">🌺</span>
+  <span class="flower f3">🌼</span>
+  <span class="flower f4">🌸</span>
+  <span class="flower f5">🌷</span>
+  <span class="flower f6">🌻</span>
+  <span class="flower f7">🌸</span>
+  <span class="flower f8">🌺</span>
+
+  <div class="card">
+    <!-- Top-right corner image -->
+    <div class="corner-img-wrap" title="Click to upload image">
+      <span class="placeholder-icon">🖼️</span>
+      <img id="cornerImg" src="" alt="Corner Photo" />
+      <input type="file" id="cornerFileInput" accept="image/png, image/jpeg, image/gif, image/webp" />
+    </div>
+
+    <h1>🌸 Journi's To Do List</h1>
+    <p class="subtitle">Stay cute & get things done 💕</p>
+
+    <!-- Image Upload Section -->
+    <div class="img-section">
+      <label>📸 Add a Photo</label>
+      <img id="imagePreview" src="" alt="Uploaded Preview" />
+      <label class="upload-btn" for="fileInput">🌸 Choose PNG Image</label>
+      <input type="file" id="fileInput" accept="image/png, image/jpeg, image/gif, image/webp" />
+    </div>
+
+    <!-- Input -->
+    <div class="input-row">
+      <input type="text" id="taskInput" placeholder="Add a new task... 🌷" maxlength="120" />
+      <button class="add-btn" onclick="addTask()">＋</button>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats">
+      <span id="totalCount">0 tasks</span>
+      <span id="doneCount">0 done 🌸</span>
+    </div>
+
+    <!-- List -->
+    <ul id="todoList"></ul>
+
+    <button class="clear-btn" onclick="clearDone()">🗑️ Clear completed tasks</button>
+  </div>
+
+  <script>
+    const flowers = ['🌸','🌺','🌼','🌷','🌻','💐','🌹','🪷'];
+    let tasks = JSON.parse(localStorage.getItem('journi_tasks') || '[]');
+
+    const taskInput = document.getElementById('taskInput');
+    const todoList  = document.getElementById('todoList');
+    const fileInput = document.getElementById('fileInput');
+    const imgPreview = document.getElementById('imagePreview');
+
+    // Corner image upload
+    document.getElementById('cornerFileInput').addEventListener('change', function() {
+      const file = this.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = document.getElementById('cornerImg');
+        img.src = e.target.result;
+        img.style.display = 'block';
+        document.querySelector('.placeholder-icon').style.display = 'none';
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // File input handler
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        imgPreview.src = e.target.result;
+        imgPreview.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Enter key
+    taskInput.addEventListener('keydown', e => { if (e.key === 'Enter') addTask(); });
+
+    function addTask() {
+      const text = taskInput.value.trim();
+      if (!text) return;
+      tasks.push({ text, done: false, flower: flowers[Math.floor(Math.random() * flowers.length)] });
+      taskInput.value = '';
+      save();
+      render();
+    }
+
+    function toggleTask(i) {
+      tasks[i].done = !tasks[i].done;
+      save(); render();
+    }
+
+    function deleteTask(i) {
+      tasks.splice(i, 1);
+      save(); render();
+    }
+
+    function clearDone() {
+      tasks = tasks.filter(t => !t.done);
+      save(); render();
+    }
+
+    function save() {
+      localStorage.setItem('journi_tasks', JSON.stringify(tasks));
+    }
+
+    function render() {
+      todoList.innerHTML = '';
+      if (tasks.length === 0) {
+        todoList.innerHTML = '<div class="empty-state"><div>🌸</div>No tasks yet — add something cute!</div>';
+      } else {
+        tasks.forEach((t, i) => {
+          const li = document.createElement('li');
+          li.className = 'todo-item' + (t.done ? ' done' : '');
+          li.innerHTML = `
+            <input type="checkbox" class="todo-check" ${t.done ? 'checked' : ''} onchange="toggleTask(${i})" />
+            <span class="todo-text">${escHtml(t.text)}</span>
+            <span class="flower-tag">${t.flower}</span>
+            <button class="delete-btn" onclick="deleteTask(${i})" title="Delete">🗑</button>
+          `;
+          todoList.appendChild(li);
+        });
+      }
+      const done = tasks.filter(t => t.done).length;
+      document.getElementById('totalCount').textContent = `${tasks.length} task${tasks.length !== 1 ? 's' : ''}`;
+      document.getElementById('doneCount').textContent = `${done} done 🌸`;
+    }
+
+    function escHtml(s) {
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    render();
+  </script>
+</body>
+</html>
